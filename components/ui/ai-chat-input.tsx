@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
-import { Lightbulb, Mic, Globe, Paperclip, Send } from "lucide-react";
+import { Lightbulb, Mic, Globe, Send } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 const PLACEHOLDERS = [
@@ -27,6 +27,32 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
   const [deepSearchActive, setDeepSearchActive] = useState(false);
   const [inputValue, setInputValue] = useState(initialValue);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const [listening, setListening] = useState(false);
+
+  // Voice input with Web Speech API
+  const handleVoiceClick = () => {
+    if (listening) return;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.onstart = () => setListening(true);
+    const stopListening = () => setListening(false);
+    recognition.onerror = stopListening;
+    recognition.onend = stopListening;
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setInputValue((prev) => (prev ? prev + " " + transcript : transcript));
+      setIsActive(true);
+    };
+    recognition.start();
+  };
 
   // Sync initialValue updates
   useEffect(() => {
@@ -130,14 +156,6 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
         <div className="flex flex-col items-stretch w-full h-full">
           {/* Input Row */}
           <div className="flex items-center gap-2 p-3 rounded-full bg-white w-full">
-            <button
-              className="p-3 rounded-full hover:bg-gray-100 transition"
-              title="Attach file"
-              type="button"
-              tabIndex={-1}
-            >
-              <Paperclip size={20} />
-            </button>
 
             {/* Text Input & Placeholder */}
             <div className="relative flex-1">
@@ -190,12 +208,13 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
             </div>
 
             <button
-              className="p-3 rounded-full hover:bg-gray-100 transition"
+              className={`p-3 rounded-full transition ${listening ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
               title="Voice input"
               type="button"
               tabIndex={-1}
+              onClick={(e) => { e.stopPropagation(); handleVoiceClick(); }}
             >
-              <Mic size={20} />
+              <Mic size={20} className={listening ? 'text-blue-600 animate-pulse' : ''} />
             </button>
             <button
               className="flex items-center gap-1 bg-black hover:bg-zinc-700 text-white p-3 rounded-full font-medium justify-center"
