@@ -1,65 +1,102 @@
+// Serverless, Netlify-friendly: generates structured summary using Gemini directly.
+// Requires env: GEMINI_API_KEY
+
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { query, results } = req.body;
-
-  if (!query || !results) {
-    return res.status(400).json({ error: 'Query and results are required' });
+  const { query, results } = req.body || {};
+  if (!query || !Array.isArray(results) || results.length === 0) {
+    return res.status(400).json({ error: 'Query and non-empty results are required' });
   }
 
-  const pythonServiceUrl = process.env.PYTHON_SERVICE_URL || 'http://localhost:5000';
-
-  // Guard: Netlify (or other hosts) cannot reach your local machine.
-  // If the request host is not localhost but PYTHON_SERVICE_URL points to localhost, surface a helpful error.
-  const requestHost = req.headers['host'] || '';
-  const isRequestLocal = requestHost.includes('localhost') || requestHost.includes('127.0.0.1');
-  const isPythonLocal = /^(http:\/\/|https:\/\/)localhost|127\.0\.0\.1/.test(pythonServiceUrl);
-  if (!isRequestLocal && isPythonLocal) {
-    return res.status(500).json({
-      success: false,
-      error: 'PYTHON_SERVICE_URL is pointing to localhost in a hosted environment',
-      message:
-        'Your site is running on a remote host (e.g., Netlify), but PYTHON_SERVICE_URL=' +
-        pythonServiceUrl +
-        ' points to localhost. Deploy the Python service to a public URL (Railway/Render/Fly/EC2/etc) and set PYTHON_SERVICE_URL to that URL. Also allow your Netlify domain in the Python CORS.',
-    });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ success: false, error: 'Missing GEMINI_API_KEY', message: 'Set GEMINI_API_KEY in your Netlify environment variables.' });
   }
 
   try {
-    // Call Python LangExtract service with a timeout
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(`${pythonServiceUrl.replace(/\/$/, '')}/summarize`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        results
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
+    // Compose a compact document from results
+    const combined = [
+      `Search Query: ${query}`,
+      '',
+      'Search Results:',
+      ...results.map((r, i) => `\nResult ${i + 1}:\nTitle: ${r.title || ''}\nURL: ${r.url || ''}\nContent: ${r.snippet || ''}`)
+    ].join('\n');
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Python service error: ${response.status}`);
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // Structured output schema matching the UI contract
+    const responseSchema = {
+      type: 'object',
+      properties: {
+        main_topic: { type: 'string' },
+        key_points: { type: 'array', items: { type: 'string' } },
+        comprehensive_summary: { type: 'string' },
+        key_entities: { type: 'array', items: { type: 'string' } },
+        main_conclusion: { type: 'string' }
+      },
+      required: ['main_topic', 'key_points', 'comprehensive_summary', 'key_entities', 'main_conclusion']
+    };
+
+    const prompt = `You are an expert synthesis engine. Read the provided search results and return a concise, accurate JSON per the schema.`;
+
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: `${prompt}\n\n${combined}` }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1200,
+        responseMimeType: 'application/json',
+        responseSchema
+      }
+    });
+
+    const text = result.response?.text();
+    let summary;
+    try {
+      summary = JSON.parse(text || '{}');
+    } catch {
+      // Fallback: minimal structure if parsing fails
+      summary = {
+        main_topic: query,
+        key_points: [],
+        comprehensive_summary: text || 'Summary generation failed',
+        key_entities: [],
+        main_conclusion: ''
+      };
     }
 
-    const data = await response.json();
-    return res.status(200).json(data);
+    const payload = {
+      success: true,
+      query,
+      summary,
+      formatted_text: [
+        `📌 **${summary.main_topic || ''}**`,
+        '',
+        '**Key Points:**',
+        ...(summary.key_points || []).map(p => `• ${p}`),
+        '',
+        '**Summary:**',
+        summary.comprehensive_summary || '',
+        '',
+        `**Key Entities:** ${(summary.key_entities || []).join(', ') || 'None identified'}`,
+        '',
+        `**Conclusion:** ${summary.main_conclusion || ''}`
+      ].join('\n')
+    };
 
+    return res.status(200).json(payload);
   } catch (error) {
-    console.error('LangExtract API error:', error);
-    return res.status(500).json({ 
+    console.error('Gemini summary error:', error);
+    return res.status(500).json({
       success: false,
-      error: error.name === 'AbortError' ? 'Python service timed out' : error.message,
-      message: 'Failed to generate summary with LangExtract',
-      hint: 'Ensure PYTHON_SERVICE_URL is publicly reachable from your hosting provider and CORS allows your site.'
+      error: error?.message || String(error),
+      message: 'Failed to generate summary with Gemini'
     });
   }
 }
