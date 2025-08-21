@@ -1,4 +1,4 @@
-import { Component } from "@/components/ui/raycast-animated-background";
+import { Component } from "@/components/ui/open-ai-codex-animated-background";
 
 export default function DemoOne() {
   return <Component />;

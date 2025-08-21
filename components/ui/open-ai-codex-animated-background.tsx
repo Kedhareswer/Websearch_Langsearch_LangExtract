@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 
-// Dynamically import to avoid SSR issues if the library touches window/document at import time
+// Client-only import to avoid SSR issues
 const UnicornScene = dynamic(() => import("unicornstudio-react"), { ssr: false });
 
 export const useWindowSize = () => {
@@ -36,9 +36,12 @@ export const Component = () => {
 
   return (
     <div className={cn("flex flex-col items-center")}>
-        <UnicornScene 
-        production={true} projectId="cbmTT38A0CcuYxeiyj5H" width={width} height={height} />
+      <UnicornScene 
+        production={true} 
+        projectId="1grEuiVDSVmyvEMAYhA6" 
+        width={width} 
+        height={height} 
+      />
     </div>
   );
 };
-
