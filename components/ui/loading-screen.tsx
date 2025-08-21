@@ -43,13 +43,15 @@ export const LoadingScreen = ({
 
   return (
     <div className={cn(
-      "fixed inset-0 z-50 flex flex-col items-center justify-center bg-background",
+      "fixed inset-0 z-50 flex flex-col items-center justify-center bg-transparent",
       className
     )}>
       {/* Animated Background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 -z-10 pointer-events-none">
         <RaycastAnimatedBackground />
       </div>
+      {/* Soft overlay for readability */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/30 via-black/20 to-background/60" />
       
       {/* Loading Content */}
       <div className="relative z-10 flex flex-col items-center space-y-6">

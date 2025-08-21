@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import dynamic from "next/dynamic";
 
 // Dynamically import to avoid SSR issues if the library touches window/document at import time
@@ -31,14 +31,19 @@ export const useWindowSize = () => {
   return windowSize;
 };
 
-export const Component = () => {
+export const Component = memo(() => {
   const { width, height } = useWindowSize();
 
   return (
-    <div className={cn("flex flex-col items-center")}>
-        <UnicornScene 
-        production={true} projectId="cbmTT38A0CcuYxeiyj5H" width={width} height={height} />
+    <div className={cn("w-full h-full")}
+         style={{ pointerEvents: "none" }}>
+      <UnicornScene
+        production={true}
+        projectId="cbmTT38A0CcuYxeiyj5H"
+        width={width}
+        height={height}
+      />
     </div>
   );
-};
+});
 
