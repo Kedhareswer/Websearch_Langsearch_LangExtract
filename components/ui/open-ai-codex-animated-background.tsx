@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import dynamic from "next/dynamic";
 
 // Client-only import to avoid SSR issues
@@ -36,7 +36,7 @@ export const useWindowSize = () => {
   return windowSize;
 };
 
-export const Component = () => {
+const BackgroundInner = () => {
   const { width, height } = useWindowSize();
 
   return (
@@ -50,3 +50,6 @@ export const Component = () => {
     </div>
   );
 };
+
+// Memoized to avoid re-renders during unrelated state updates (e.g., search results)
+export const Component = memo(BackgroundInner);

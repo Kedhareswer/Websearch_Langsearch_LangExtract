@@ -38,7 +38,7 @@ interface LangExtractResponse {
 }
 
 export default function Home() {
-  const [query, setQuery] = useState('What is LangSearch?')
+  const [query, setQuery] = useState('')
   const [count, setCount] = useState(5)
   const [results, setResults] = useState<SearchResult[]>([])
   const [summary, setSummary] = useState('')
@@ -138,7 +138,7 @@ export default function Home() {
         <section className="min-h-[60vh] flex items-center justify-center">
           <div className="w-full max-w-3xl text-center">
             <h1
-              className={`${amarante.className} text-[36px] leading-tight text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-6`}
+              className={`${amarante.className} text-[48px] md:text-[64px] leading-tight text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-12`}
             >
               Next Search
             </h1>
