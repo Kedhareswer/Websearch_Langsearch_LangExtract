@@ -75,6 +75,7 @@ export default async function handler(req, res) {
     const payload = {
       success: true,
       query,
+      thinkMode,
       summary,
       formatted_text: [
         `📌 **${summary.main_topic || ''}**`,

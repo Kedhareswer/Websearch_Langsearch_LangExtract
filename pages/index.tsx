@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Component as OpenAICodexBackground } from "@/components/ui/open-ai-codex-animated-background";
 import { AIChatInput } from "@/components/ui/ai-chat-input";
+import { Amarante } from 'next/font/google'
+
+const amarante = Amarante({ subsets: ['latin'], weight: '400' })
 
 interface SearchResult {
   title: string;
@@ -28,6 +31,7 @@ interface LangExtractSummary {
 interface LangExtractResponse {
   success: boolean;
   query: string;
+  thinkMode?: boolean;
   summary: LangExtractSummary;
   formatted_text: string;
   error?: string;
@@ -132,7 +136,12 @@ export default function Home() {
       <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-10 relative z-10">
         {/* Center only the input */}
         <section className="min-h-[60vh] flex items-center justify-center">
-          <div className="w-full max-w-3xl">
+          <div className="w-full max-w-3xl text-center">
+            <h1
+              className={`${amarante.className} text-[36px] leading-tight text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-6`}
+            >
+              Next Search
+            </h1>
             <AIChatInput
               initialValue={query}
               onSend={(text, options) => {
@@ -225,8 +234,8 @@ export default function Home() {
                     </p>
                   </div>
 
-                  {/* Thought process (collapsible) */}
-                  {langExtractSummary.summary.thought_process && (
+                  {/* Thought process (collapsible, only when Think Mode is enabled) */}
+                  {langExtractSummary.thinkMode && langExtractSummary.summary.thought_process && (
                     <details className="mt-4 space-y-2">
                       <summary className="cursor-pointer font-semibold text-primary">
                         Show reasoning steps
