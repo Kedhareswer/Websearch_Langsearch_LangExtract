@@ -6,12 +6,12 @@ import { Lightbulb, Mic, Globe, Send } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 
 const PLACEHOLDERS = [
-  "Generate website with HextaUI",
-  "Create a new project with Next.js",
+  "Generative website builders which produces great designs",
+  "How to create a new project with Next.js",
   "What is the meaning of life?",
   "What is the best way to learn React?",
   "How to cook a delicious meal?",
-  "Summarize this article",
+  "How to Write any article",
 ];
 
 export interface AIChatInputProps {

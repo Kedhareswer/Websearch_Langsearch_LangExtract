@@ -181,6 +181,40 @@ flowchart TB
 
 ---
 
+## ✨ Recent UI Updates (Aug 2025)
+
+- **Bigger Title + More Spacing**
+  - File: `pages/index.tsx`
+  - Change: `h1` now uses `text-[48px] md:text-[64px]` with `mb-12` for increased gap above the input.
+
+- **Prevent background flashing during search**
+  - File: `components/ui/open-ai-codex-animated-background.tsx`
+  - Change: Wrapped the background component with `React.memo` (`export const Component = memo(BackgroundInner)`) so it doesn't re-render on search state changes.
+  - Still client-only via `next/dynamic(..., { ssr: false })`.
+
+- **Empty initial input to show rotating placeholders**
+  - File: `pages/index.tsx`
+  - Change: `const [query, setQuery] = useState('')` (was `'What is LangSearch?'`).
+
+- **Updated rotating placeholder suggestions**
+  - File: `components/ui/ai-chat-input.tsx`
+  - Array: `PLACEHOLDERS`
+  - Values:
+```ts
+const PLACEHOLDERS = [
+  "Generative website builders which produces great designs",
+  "How to create a new project with Next.js",
+  "What is the meaning of life?",
+  "What is the best way to learn React?",
+  "How to cook a delicious meal?",
+  "How to Write any article",
+];
+```
+
+- **Customize placeholders**: edit the `PLACEHOLDERS` array in `components/ui/ai-chat-input.tsx`. The input shows rotating placeholders when inactive and empty.
+
+---
+
 ## 📦 Tech Stack
 
 | Layer | Tools |
