@@ -69,10 +69,9 @@ export default function Home() {
 
       {/* Foreground content */}
       <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-10 relative z-10">
-        {/* Centered hero card containing input and controls */}
-        <section className="min-h-[50vh] flex items-center justify-center">
-          <div className="w-full max-w-3xl rounded-2xl border border-white/20 bg-white/70 dark:bg-zinc-900/60 backdrop-blur-md shadow-xl p-6 space-y-6">
-            {/* AI Chat style search input */}
+        {/* Center only the input */}
+        <section className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-full max-w-3xl">
             <AIChatInput
               initialValue={query}
               onSend={(text) => {
@@ -82,28 +81,6 @@ export default function Home() {
                 }
               }}
             />
-
-            {/* Compact controls */}
-            <div className="flex items-end gap-4 justify-center">
-              <div className="space-y-2 w-36">
-                <label className="text-sm font-medium text-foreground">Result Count</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-md bg-white/80 dark:bg-zinc-800/60 border border-white/30 dark:border-zinc-700 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-                />
-              </div>
-              <button
-                onClick={() => searchWithQuery(query)}
-                disabled={loading}
-                className="h-10 px-5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Searching…' : 'Search'}
-              </button>
-            </div>
           </div>
         </section>
 
