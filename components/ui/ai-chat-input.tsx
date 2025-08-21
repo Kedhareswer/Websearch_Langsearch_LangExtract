@@ -15,7 +15,7 @@ const PLACEHOLDERS = [
 ];
 
 export interface AIChatInputProps {
-  onSend?: (text: string) => void;
+  onSend?: (text: string, options?: { thinkMode?: boolean; deepSearch?: boolean }) => void;
   initialValue?: string;
 }
 
@@ -66,7 +66,7 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
   const handleActivate = () => setIsActive(true);
 
   const handleSend = () => {
-    if (onSend) onSend(inputValue.trim());
+    if (onSend) onSend(inputValue.trim(), { thinkMode: thinkActive, deepSearch: deepSearchActive });
   };
 
   const containerVariants = {

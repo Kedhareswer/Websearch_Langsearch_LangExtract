@@ -22,6 +22,7 @@ interface LangExtractSummary {
   comprehensive_summary: string;
   key_entities: string[];
   main_conclusion: string;
+  thought_process?: string;
 }
 
 interface LangExtractResponse {
@@ -44,7 +45,7 @@ export default function Home() {
   const [extractError, setExtractError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const searchWithQuery = async (q: string) => {
+  const searchWithQuery = async (q: string, options?: { thinkMode?: boolean; deepSearch?: boolean }) => {
     setLoading(true)
     setError(null)
     setResults([])
@@ -53,10 +54,20 @@ export default function Home() {
     setExtractError(null)
 
     try {
+      // Deep Search: more results + better freshness + semantic reranking
+      const searchCount = options?.deepSearch ? Math.max(count * 2, 15) : count
+      const freshness = options?.deepSearch ? '7d' : 'noLimit'
+      
       const res = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, count, freshness: 'noLimit', summary: true })
+        body: JSON.stringify({ 
+          query: q, 
+          count: searchCount, 
+          freshness, 
+          summary: true,
+          deepSearch: options?.deepSearch || false
+        })
       })
 
       const data: SearchResponse = await res.json()
@@ -77,7 +88,8 @@ export default function Home() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               query: q, 
-              results: data.results 
+              results: data.results,
+              thinkMode: options?.thinkMode || false
             })
           })
 
@@ -123,10 +135,10 @@ export default function Home() {
           <div className="w-full max-w-3xl">
             <AIChatInput
               initialValue={query}
-              onSend={(text) => {
+              onSend={(text, options) => {
                 if (text) {
                   setQuery(text)
-                  searchWithQuery(text)
+                  searchWithQuery(text, options)
                 }
               }}
             />
@@ -212,6 +224,18 @@ export default function Home() {
                       {langExtractSummary.summary.main_conclusion}
                     </p>
                   </div>
+
+                  {/* Thought process (collapsible) */}
+                  {langExtractSummary.summary.thought_process && (
+                    <details className="mt-4 space-y-2">
+                      <summary className="cursor-pointer font-semibold text-primary">
+                        Show reasoning steps
+                      </summary>
+                      <pre className="whitespace-pre-wrap text-sm leading-relaxed bg-muted/50 p-3 rounded-md">
+                        {langExtractSummary.summary.thought_process}
+                      </pre>
+                    </details>
+                  )}
                 </div>
               ) : null}
             </div>

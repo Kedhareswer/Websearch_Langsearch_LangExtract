@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     count = 10,
     freshness = 'noLimit',
     summary = true,
+    deepSearch = false,
   } = req.body || {};
 
   const apiKey = process.env.LANGSEARCH_API_KEY;
@@ -63,6 +64,36 @@ export default async function handler(req, res) {
         snippet: r.snippet,
       }));
       summaryText = data?.summary || summaryText;
+    }
+
+    // Optional semantic reranking for Deep Search mode
+    if (deepSearch && results.length > 0) {
+      try {
+        const rerankRes = await fetch(`${base.replace(/\/$/, '')}/v1/rerank`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'langsearch-reranker-v1',
+            query,
+            documents: results.map((r) => r.snippet || r.title || ''),
+            top_n: results.length,
+            return_documents: true,
+          }),
+        });
+        const rerankJson = await rerankRes.json();
+        if (rerankRes.ok && Array.isArray(rerankJson?.results)) {
+          // results indices refer to original array positions
+          const ordered = rerankJson.results
+            .sort((a, b) => b.score - a.score)
+            .map((r) => results[r.index]);
+          results = ordered;
+        }
+      } catch (err) {
+        console.error('Rerank error:', err);
+      }
     }
 
     return res.status(200).json({

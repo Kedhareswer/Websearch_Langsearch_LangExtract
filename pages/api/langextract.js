@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { query, results } = req.body || {};
+  const { query, results, thinkMode = false } = req.body || {};
   if (!query || !Array.isArray(results) || results.length === 0) {
     return res.status(400).json({ error: 'Query and non-empty results are required' });
   }
@@ -39,12 +39,13 @@ export default async function handler(req, res) {
         key_points: { type: 'array', items: { type: 'string' } },
         comprehensive_summary: { type: 'string' },
         key_entities: { type: 'array', items: { type: 'string' } },
-        main_conclusion: { type: 'string' }
+        main_conclusion: { type: 'string' },
+        thought_process: { type: 'string' }
       },
       required: ['main_topic', 'key_points', 'comprehensive_summary', 'key_entities', 'main_conclusion']
     };
 
-    const prompt = `You are an expert synthesis engine. Read the provided search results and return a concise, accurate JSON per the schema.`;
+    const prompt = `You are an expert synthesis engine. Read the provided search results and return a concise, accurate JSON per the schema. ${thinkMode ? 'Additionally include a detailed thought_process field explaining step-by-step reasoning used to reach the summary.' : ''}`;
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: `${prompt}\n\n${combined}` }] }],
