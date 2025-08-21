@@ -41,6 +41,7 @@ export default function Home() {
   const [raw, setRaw] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [extractLoading, setExtractLoading] = useState(false)
+  const [extractError, setExtractError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const searchWithQuery = async (q: string) => {
@@ -49,6 +50,7 @@ export default function Home() {
     setResults([])
     setSummary('')
     setLangExtractSummary(null)
+    setExtractError(null)
 
     try {
       const res = await fetch('/api/search', {
@@ -80,12 +82,15 @@ export default function Home() {
           })
 
           const extractData: LangExtractResponse = await extractRes.json()
-          if (extractData.success) {
+          if (extractRes.ok && extractData.success) {
             setLangExtractSummary(extractData)
+          } else {
+            setExtractError(extractData?.error || 'AI summary unavailable')
           }
         } catch (extractErr) {
           console.error('LangExtract error:', extractErr)
-          // Don't show error for LangExtract, just continue with regular results
+          setExtractError(extractErr instanceof Error ? extractErr.message : String(extractErr))
+          // Continue with regular results; Original summary section will still render if present
         } finally {
           setExtractLoading(false)
         }
@@ -135,16 +140,26 @@ export default function Home() {
         )}
 
         {/* LangExtract AI Summary Section */}
-        {(langExtractSummary || extractLoading) && (
+        {(langExtractSummary || extractLoading || extractError) && (
           <section className="space-y-4">
-            <div className="p-6 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+            <div className="relative p-6 rounded-2xl border bg-white/70 dark:bg-zinc-900/50 backdrop-blur-xl shadow-xl
+                            border-white/20 ring-1 ring-black/5 overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 rounded-2xl [mask-image:radial-gradient(70%_70%_at_50%_0%,black,transparent)]
+                              bg-gradient-to-b from-primary/10 to-transparent" />
               <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
                 <span className="text-2xl">🤖</span> AI-Powered Summary by LangExtract
               </h2>
               {extractLoading ? (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  Generating intelligent summary...
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-4 w-40 bg-foreground/10 rounded" />
+                  <div className="h-3 w-full bg-foreground/10 rounded" />
+                  <div className="h-3 w-11/12 bg-foreground/10 rounded" />
+                  <div className="h-3 w-10/12 bg-foreground/10 rounded" />
+                </div>
+              ) : extractError ? (
+                <div className="p-4 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-200">
+                  <div className="font-semibold mb-1">AI summary unavailable</div>
+                  <div className="text-sm opacity-90">{extractError}</div>
                 </div>
               ) : langExtractSummary?.success ? (
                 <div className="space-y-4">
