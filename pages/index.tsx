@@ -16,13 +16,31 @@ interface SearchResponse {
   details?: any;
 }
 
+interface LangExtractSummary {
+  main_topic: string;
+  key_points: string[];
+  comprehensive_summary: string;
+  key_entities: string[];
+  main_conclusion: string;
+}
+
+interface LangExtractResponse {
+  success: boolean;
+  query: string;
+  summary: LangExtractSummary;
+  formatted_text: string;
+  error?: string;
+}
+
 export default function Home() {
   const [query, setQuery] = useState('What is LangSearch?')
   const [count, setCount] = useState(5)
   const [results, setResults] = useState<SearchResult[]>([])
   const [summary, setSummary] = useState('')
+  const [langExtractSummary, setLangExtractSummary] = useState<LangExtractResponse | null>(null)
   const [raw, setRaw] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [extractLoading, setExtractLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const searchWithQuery = async (q: string) => {
@@ -30,6 +48,7 @@ export default function Home() {
     setError(null)
     setResults([])
     setSummary('')
+    setLangExtractSummary(null)
 
     try {
       const res = await fetch('/api/search', {
@@ -46,6 +65,31 @@ export default function Home() {
       setResults(data.results || [])
       setSummary(data.summary || '')
       setRaw(data.raw || null)
+
+      // Call LangExtract for enhanced summary if we have results
+      if (data.results && data.results.length > 0) {
+        setExtractLoading(true)
+        try {
+          const extractRes = await fetch('/api/langextract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              query: q, 
+              results: data.results 
+            })
+          })
+
+          const extractData: LangExtractResponse = await extractRes.json()
+          if (extractData.success) {
+            setLangExtractSummary(extractData)
+          }
+        } catch (extractErr) {
+          console.error('LangExtract error:', extractErr)
+          // Don't show error for LangExtract, just continue with regular results
+        } finally {
+          setExtractLoading(false)
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -90,10 +134,83 @@ export default function Home() {
           </div>
         )}
 
+        {/* LangExtract AI Summary Section */}
+        {(langExtractSummary || extractLoading) && (
+          <section className="space-y-4">
+            <div className="p-6 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+              <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
+                <span className="text-2xl">🤖</span> AI-Powered Summary by LangExtract
+              </h2>
+              {extractLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  Generating intelligent summary...
+                </div>
+              ) : langExtractSummary?.success ? (
+                <div className="space-y-4">
+                  {/* Main Topic */}
+                  <div className="text-lg font-semibold text-primary">
+                    📌 {langExtractSummary.summary.main_topic}
+                  </div>
+                  
+                  {/* Key Points */}
+                  {langExtractSummary.summary.key_points.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Key Points:</h3>
+                      <ul className="space-y-1">
+                        {langExtractSummary.summary.key_points.map((point, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-primary mt-1">•</span>
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Comprehensive Summary */}
+                  <div>
+                    <h3 className="font-semibold mb-2">Summary:</h3>
+                    <p className="text-foreground leading-relaxed">
+                      {langExtractSummary.summary.comprehensive_summary}
+                    </p>
+                  </div>
+                  
+                  {/* Key Entities */}
+                  {langExtractSummary.summary.key_entities.length > 0 && (
+                    <div>
+                      <h3 className="font-semibold mb-2">Key Entities:</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {langExtractSummary.summary.key_entities.map((entity, i) => (
+                          <span key={i} className="px-3 py-1 bg-primary/10 rounded-full text-sm">
+                            {entity}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Main Conclusion */}
+                  <div className="p-4 bg-primary/5 rounded-lg border-l-4 border-primary">
+                    <h3 className="font-semibold mb-1">Conclusion:</h3>
+                    <p className="text-foreground">
+                      {langExtractSummary.summary.main_conclusion}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        )}
+
+        {/* Original LangSearch Summary */}
         {summary && (
           <section className="space-y-4">
-            <div className="p-4 bg-muted rounded-md border whitespace-pre-wrap">
-              {summary}
+            <div className="p-4 bg-muted rounded-md border">
+              <h3 className="font-semibold mb-2">Original LangSearch Summary:</h3>
+              <div className="whitespace-pre-wrap">
+                {summary}
+              </div>
             </div>
           </section>
         )}
