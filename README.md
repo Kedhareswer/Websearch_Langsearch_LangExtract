@@ -19,15 +19,15 @@ A visually rich, AI-powered web search experience. Type a query, get an instant,
 ## 🧭 Architecture at a Glance
 
 ```mermaid
-graph TD
-  A[User Query] --> B[Next.js UI (pages/index.tsx)]
-  B --> C[/POST /api/search\nLangSearch/]
-  C --> D{LangSearch API}
-  D --> E[Results JSON]
-  E --> F[/POST /api/langextract\nFE → Python/]
-  F --> G[Flask Service\n(langextract_service.py)]
-  G --> H[LangExtract + Gemini]
-  H --> I[Structured Summary JSON]
+flowchart TD
+  A["User Query"] --> B["Next.js UI (pages/index.tsx)"]
+  B --> C["POST /api/search<br/>LangSearch"]
+  C --> D{"LangSearch API"}
+  D --> E["Results JSON"]
+  E --> F["POST /api/langextract<br/>FE -> Python"]
+  F --> G["Flask Service<br/>(langextract_service.py)"]
+  G --> H["LangExtract + Gemini"]
+  H --> I["Structured Summary JSON"]
   I --> B
   E --> B
 ```

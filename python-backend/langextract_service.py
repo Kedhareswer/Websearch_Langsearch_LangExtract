@@ -20,7 +20,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3000", "http://localhost:3001"])
+# Configure CORS: allow localhost by default and optionally additional origins via env
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "").strip()
+default_origins = ["http://localhost:3000", "http://localhost:3001"]
+if allowed_origins_env:
+    # Support comma-separated list
+    extra_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+    cors_origins = default_origins + extra_origins
+else:
+    # In absence of explicit config, allow all for easy dev. Recommend tightening in prod.
+    cors_origins = default_origins
+
+CORS(app, origins=cors_origins)
 
 # Configure Gemini API
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
