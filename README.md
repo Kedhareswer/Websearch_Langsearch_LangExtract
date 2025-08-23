@@ -1,4 +1,4 @@
-# LangSearch × LangExtract × Google Gemini
+# LangSearch × LangExtract × Google Gemini - Next Search
 
 A visually rich, AI-powered web search experience. Type a query, get an instant, structured AI summary from Google's LangExtract (powered by Gemini), followed by high-quality web results from LangSearch.
 

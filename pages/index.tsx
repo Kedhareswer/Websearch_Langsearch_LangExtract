@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Component as OpenAICodexBackground } from "@/components/ui/open-ai-codex-animated-background";
 import { AIChatInput } from "@/components/ui/ai-chat-input";
 import { Amarante } from 'next/font/google'
+import { ArrowRight, Github, Instagram, Twitter } from 'lucide-react'
 
 const amarante = Amarante({ subsets: ['latin'], weight: '400' })
 
@@ -134,11 +135,11 @@ export default function Home() {
 
       {/* Foreground content */}
       <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-10 relative z-10">
-        {/* Center only the input */}
+        {/* Hero: title, input, subtitle, CTA */}
         <section className="min-h-[60vh] flex items-center justify-center">
           <div className="w-full max-w-3xl text-center">
             <h1
-              className={`${amarante.className} text-[48px] md:text-[64px] leading-tight text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)] mb-12`}
+              className={`${amarante.className} text-[56px] md:text-[88px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] mb-8`}
             >
               Next Search
             </h1>
@@ -151,6 +152,21 @@ export default function Home() {
                 }
               }}
             />
+
+            {/* Subtitle */}
+            <p className="mt-6 text-white/90 text-base md:text-lg max-w-2xl mx-auto">
+              Stay updated with the latest news and exclusive content! Search smarter with AI-powered results and never miss out on exciting updates.
+            </p>
+
+            {/* CTA */}
+            <div className="mt-6">
+              <a
+                href="#manifesto"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/20 hover:bg-white/30 border border-white/40 text-white backdrop-blur-md shadow-lg transition"
+              >
+                Manifesto <ArrowRight size={18} />
+              </a>
+            </div>
           </div>
         </section>
 
@@ -300,6 +316,33 @@ export default function Home() {
             </pre>
           </details>
         )}
+      </div>
+
+      {/* Socials row */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4">
+        <a
+          href="#instagram"
+          className="w-10 h-10 rounded-full bg-[#e0aaa7]/20 hover:bg-[#e0aaa7]/30 border border-[#e0aaa7]/40 backdrop-blur-md flex items-center justify-center text-[#e0aaa7] transition transform duration-200 ease-out hover:scale-110 hover:-translate-y-0.5 hover:ring-2 hover:ring-[#e0aaa7]/60"
+          aria-label="Instagram"
+        >
+          <Instagram size={18} />
+        </a>
+        <a
+          href="#twitter"
+          className="w-10 h-10 rounded-full bg-[#e0aaa7]/20 hover:bg-[#e0aaa7]/30 border border-[#e0aaa7]/40 backdrop-blur-md flex items-center justify-center text-[#e0aaa7] transition transform duration-200 ease-out hover:scale-110 hover:-translate-y-0.5 hover:ring-2 hover:ring-[#e0aaa7]/60"
+          aria-label="Twitter (X)"
+        >
+          <Twitter size={18} />
+        </a>
+        <a
+          href="https://github.com/Kedhareswer/Websearch_Langsearch_LangExtract"
+          target="_blank"
+          rel="noreferrer noopener"
+          className="w-10 h-10 rounded-full bg-[#e0aaa7]/20 hover:bg-[#e0aaa7]/30 border border-[#e0aaa7]/40 backdrop-blur-md flex items-center justify-center text-[#e0aaa7] transition transform duration-200 ease-out hover:scale-110 hover:-translate-y-0.5 hover:ring-2 hover:ring-[#e0aaa7]/60"
+          aria-label="GitHub"
+        >
+          <Github size={18} />
+        </a>
       </div>
     </main>
   )

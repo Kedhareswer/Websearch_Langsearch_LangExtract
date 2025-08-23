@@ -143,19 +143,19 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
   } as const;
 
   return (
-    <div className="w-full flex justify-center items-center text-foreground">
+    <div className="w-full flex justify-center items-center text-white">
       <motion.div
         ref={wrapperRef}
-        className="w-full"
+        className="w-full border border-white/30 bg-white/10 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
         variants={containerVariants}
         animate={isActive || inputValue ? "expanded" : "collapsed"}
         initial="collapsed"
-        style={{ overflow: "hidden", borderRadius: 32, background: "#fff" }}
+        style={{ overflow: "hidden", borderRadius: 32 }}
         onClick={handleActivate}
       >
         <div className="flex flex-col items-stretch w-full h-full">
           {/* Input Row */}
-          <div className="flex items-center gap-2 p-3 rounded-full bg-white w-full">
+          <div className="flex items-center gap-2 p-3 rounded-full w-full">
 
             {/* Text Input & Placeholder */}
             <div className="relative flex-1">
@@ -169,7 +169,7 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
                     handleSend();
                   }
                 }}
-                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal"
+                className="flex-1 border-0 outline-0 rounded-md py-2 text-base bg-transparent w-full font-normal text-white"
                 style={{ position: "relative", zIndex: 1 }}
                 onFocus={handleActivate}
               />
@@ -178,7 +178,7 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
                   {showPlaceholder && !isActive && !inputValue && (
                     <motion.span
                       key={placeholderIndex}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 select-none pointer-events-none"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 text-white/70 select-none pointer-events-none"
                       style={{
                         whiteSpace: "nowrap",
                         overflow: "hidden",
@@ -208,16 +208,16 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
             </div>
 
             <button
-              className={`p-3 rounded-full transition ${listening ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+              className={`p-3 rounded-full transition ${listening ? 'bg-white/30' : 'bg-white/20 hover:bg-white/30'} text-white`}
               title="Voice input"
               type="button"
               tabIndex={-1}
               onClick={(e) => { e.stopPropagation(); handleVoiceClick(); }}
             >
-              <Mic size={20} className={listening ? 'text-blue-600 animate-pulse' : ''} />
+              <Mic size={20} className={listening ? 'animate-pulse' : ''} />
             </button>
             <button
-              className="flex items-center gap-1 bg-black hover:bg-zinc-700 text-white p-3 rounded-full font-medium justify-center"
+              className="flex items-center gap-1 bg-white hover:bg-zinc-100 text-zinc-900 p-3 rounded-full font-medium justify-center"
               title="Send"
               type="button"
               tabIndex={-1}
@@ -253,8 +253,8 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
               <button
                 className={`flex items-center gap-1 px-4 py-2 rounded-full transition-all font-medium group ${
                   thinkActive
-                    ? "bg-blue-600/10 outline outline-blue-600/60 text-blue-950"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-white text-zinc-900 ring-1 ring-white/70"
+                    : "bg-white/20 text-white hover:bg-white/30"
                 }`}
                 title="Think"
                 type="button"
@@ -274,8 +274,8 @@ const AIChatInput = ({ onSend, initialValue = "" }: AIChatInputProps) => {
               <motion.button
                 className={`flex items-center px-4 gap-1 py-2 rounded-full transition font-medium whitespace-nowrap overflow-hidden justify-start  ${
                   deepSearchActive
-                    ? "bg-blue-600/10 outline outline-blue-600/60 text-blue-950"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-white text-zinc-900 ring-1 ring-white/70"
+                    : "bg-white/20 text-white hover:bg-white/30"
                 }`}
                 title="Deep Search"
                 type="button"
