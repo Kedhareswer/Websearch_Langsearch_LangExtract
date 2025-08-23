@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Component as OpenAICodexBackground } from "@/components/ui/open-ai-codex-animated-background";
 import { AIChatInput } from "@/components/ui/ai-chat-input";
+import LatestNews from "@/components/ui/latest-news";
 import { Amarante } from 'next/font/google'
 import { ArrowRight, Github, Instagram, Twitter } from 'lucide-react'
 
@@ -49,6 +50,8 @@ export default function Home() {
   const [extractLoading, setExtractLoading] = useState(false)
   const [extractError, setExtractError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showNews, setShowNews] = useState(false)
+  const [isSnapping, setIsSnapping] = useState(false)
 
   const searchWithQuery = async (q: string, options?: { thinkMode?: boolean; deepSearch?: boolean }) => {
     setLoading(true)
@@ -124,6 +127,18 @@ export default function Home() {
     await searchWithQuery(query)
   }
 
+  const openLatestNews = () => {
+    // Trigger Thanos Snap on hero, then show news
+    setIsSnapping(true)
+    const SNAP_DURATION_MS = 1000
+    setTimeout(() => {
+      setShowNews(true)
+      setIsSnapping(false)
+    }, SNAP_DURATION_MS)
+  }
+
+  const closeLatestNews = () => setShowNews(false)
+
   return (
     <main className="relative min-h-screen">
       {/* Background */}
@@ -136,8 +151,9 @@ export default function Home() {
       {/* Foreground content */}
       <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-10 relative z-10">
         {/* Hero: title, input, subtitle, CTA */}
+        {!showNews && (
         <section className="min-h-[60vh] flex items-center justify-center">
-          <div className="w-full max-w-3xl text-center">
+          <div className={`w-full max-w-3xl text-center ${isSnapping ? 'thanos-snap' : ''}`}>
             <h1
               className={`${amarante.className} text-[56px] md:text-[88px] leading-tight text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] mb-8`}
             >
@@ -160,15 +176,21 @@ export default function Home() {
 
             {/* CTA */}
             <div className="mt-6">
-              <a
-                href="#manifesto"
+              <button
+                type="button"
+                onClick={openLatestNews}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/20 hover:bg-white/30 border border-white/40 text-white backdrop-blur-md shadow-lg transition"
               >
-                Manifesto <ArrowRight size={18} />
-              </a>
+                Latest News <ArrowRight size={18} />
+              </button>
             </div>
           </div>
         </section>
+        )}
+
+        {showNews && (
+          <LatestNews onBack={closeLatestNews} />
+        )}
 
         {error && (
           <div className="p-4 border border-destructive bg-destructive/10 text-destructive rounded-md">

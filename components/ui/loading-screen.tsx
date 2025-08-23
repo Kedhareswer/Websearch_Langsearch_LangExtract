@@ -57,7 +57,7 @@ export const LoadingScreen = ({
       <div className="relative z-10 flex flex-col items-center space-y-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            LangSearch
+            Next Search
           </h1>
           <p className="text-lg text-muted-foreground">
             Initializing your search experience...
