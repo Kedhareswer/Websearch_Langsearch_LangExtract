@@ -83,6 +83,18 @@ body { margin: 0; }
   to { opacity: 0; }
 }
 
+/* Subtle fade-in up for cards */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Apply to a container to disintegrate its children */
 .thanos-snap > * {
   animation: snapScatter 0.9s ease-in forwards;

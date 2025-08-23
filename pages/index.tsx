@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Component as OpenAICodexBackground } from "@/components/ui/open-ai-codex-animated-background";
 import { AIChatInput } from "@/components/ui/ai-chat-input";
 import LatestNews from "@/components/ui/latest-news";
@@ -52,6 +52,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [showNews, setShowNews] = useState(false)
   const [isSnapping, setIsSnapping] = useState(false)
+  const ctaRef = useRef<HTMLButtonElement | null>(null)
 
   const searchWithQuery = async (q: string, options?: { thinkMode?: boolean; deepSearch?: boolean }) => {
     setLoading(true)
@@ -137,7 +138,21 @@ export default function Home() {
     }, SNAP_DURATION_MS)
   }
 
-  const closeLatestNews = () => setShowNews(false)
+  const closeLatestNews = () => {
+    setShowNews(false)
+    // Restore focus to CTA after view closes
+    requestAnimationFrame(() => ctaRef.current?.focus())
+  }
+
+  // Close Latest News with Escape key
+  useEffect(() => {
+    if (!showNews) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLatestNews()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showNews])
 
   return (
     <main className="relative min-h-screen">
@@ -146,7 +161,7 @@ export default function Home() {
         <OpenAICodexBackground />
       </div>
       {/* Contrast Overlay */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/40 via-black/20 to-background/80" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-black/50 via-black/25 to-background/85" />
 
       {/* Foreground content */}
       <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-10 relative z-10">
@@ -179,7 +194,8 @@ export default function Home() {
               <button
                 type="button"
                 onClick={openLatestNews}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/20 hover:bg-white/30 border border-white/40 text-white backdrop-blur-md shadow-lg transition"
+                aria-label="Open latest news"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 text-white backdrop-blur-2xl shadow-lg ring-1 ring-black/5 transition"
               >
                 Latest News <ArrowRight size={18} />
               </button>
