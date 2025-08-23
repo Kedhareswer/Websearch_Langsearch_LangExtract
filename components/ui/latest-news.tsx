@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Newspaper } from "lucide-react";
+import { ArrowLeft, Newspaper, Loader2 } from "lucide-react";
+import { Amarante } from 'next/font/google'
+
+const amarante = Amarante({ subsets: ['latin'], weight: '400' })
 
 interface SearchResult {
   title: string;
@@ -12,6 +15,7 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
   const [items, setItems] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const backBtnRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
@@ -57,7 +61,10 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
         }
 
         if (!res.ok || data?.error) throw new Error(data?.error || "Failed to fetch news");
-        if (isMounted) setItems(Array.isArray(data?.results) ? data.results : []);
+        if (isMounted) {
+          setItems(Array.isArray(data?.results) ? data.results : []);
+          setLastUpdated(Date.now());
+        }
       } catch (e) {
         if (isMounted) setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -75,12 +82,28 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
     };
   }, []);
 
+  // util: extract hostname from URL
+  const getHost = (u: string) => {
+    try {
+      return new URL(u).hostname.replace(/^www\./, "");
+    } catch {
+      return u;
+    }
+  };
+
   return (
-    <section className="min-h-[60vh] pb-10" role="region" aria-labelledby="latest-news-heading">
+    <section id="latest-news-section" className="min-h-[60vh] pb-10" role="region" aria-labelledby="latest-news-heading">
       <div className="relative p-6 rounded-2xl border bg-white/85 dark:bg-zinc-900/70 backdrop-blur-2xl shadow-xl border-white/30 ring-1 ring-black/5 overflow-hidden">
         <div className="pointer-events-none absolute inset-0 rounded-2xl [mask-image:radial-gradient(70%_70%_at_50%_0%,black,transparent)] bg-gradient-to-b from-primary/15 to-transparent" />
         <div className="sticky top-0 z-10 flex items-center justify-between gap-4 mb-4 p-3 rounded-xl bg-white/60 dark:bg-zinc-900/60 backdrop-blur border border-white/30">
-          <h2 id="latest-news-heading" className="text-xl font-bold text-foreground">📰 Latest News</h2>
+          <div className="flex items-center gap-3">
+            <h2 id="latest-news-heading" className={`${amarante.className} text-xl font-bold text-foreground`}>📰 Latest News</h2>
+            {lastUpdated && (
+              <span className="text-sm text-muted-foreground">
+                Updated {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -117,6 +140,7 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
                     }
                     if (!res.ok || data?.error) throw new Error(data?.error || "Failed to fetch news");
                     setItems(Array.isArray(data?.results) ? data.results : []);
+                    setLastUpdated(Date.now());
                     setError(null);
                   } catch (err) {
                     setError(err instanceof Error ? err.message : String(err));
@@ -125,9 +149,12 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
                   }
                 })();
               }}
-              className="px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 border border-white/40 text-white backdrop-blur-md shadow transition"
+              aria-label="Refresh latest news"
+              disabled={loading}
+              aria-disabled={loading}
+              className={`px-3 py-2 rounded-full bg-white/20 hover:bg-white/30 border border-white/40 text-white backdrop-blur-md shadow transition inline-flex items-center gap-2 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
-              Retry
+              {loading ? (<><Loader2 size={16} className="animate-spin" /> Refreshing</>) : 'Refresh'}
             </button>
             {onBack && (
               <button
@@ -144,7 +171,7 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
 
         {loading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" role="status" aria-live="polite" aria-busy="true">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
                 className="p-4 rounded-xl border border-white/30 bg-white/70 dark:bg-zinc-900/60 backdrop-blur animate-pulse"
@@ -177,17 +204,25 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
         {!loading && !error && items.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {items.map((r: SearchResult, i: number) => (
-              <div
+              <a
                 key={i}
-                className="p-4 rounded-xl border border-white/30 bg-white/90 dark:bg-zinc-900/70 backdrop-blur shadow-md hover:shadow-lg transition-shadow motion-safe:animate-[fadeInUp_0.35s_ease-out_both]"
+                href={r.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block p-4 rounded-xl border border-white/30 bg-white/90 dark:bg-zinc-900/70 backdrop-blur shadow-md hover:shadow-lg transition-shadow motion-safe:animate-[fadeInUp_0.35s_ease-out_both] focus:outline-none focus:ring-2 focus:ring-primary/40"
                 style={{ animationDelay: `${i * 40}ms` }}
+                aria-label={`Open ${r.title} in a new tab`}
               >
-                <a href={r.url} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold text-primary hover:underline">
+                <div className="text-lg font-semibold text-primary hover:underline">
                   {r.title}
-                </a>
-                {r.url && <div className="text-sm text-muted-foreground mt-1 break-all">{r.url}</div>}
+                </div>
+                {r.url && (
+                  <div className="text-sm text-muted-foreground mt-1 break-all">
+                    {getHost(r.url)}
+                  </div>
+                )}
                 {r.snippet && <p className="mt-2 text-foreground leading-relaxed">{r.snippet}</p>}
-              </div>
+              </a>
             ))}
           </div>
         )}

@@ -195,6 +195,9 @@ export default function Home() {
                 type="button"
                 onClick={openLatestNews}
                 aria-label="Open latest news"
+                aria-controls="latest-news-section"
+                aria-expanded={showNews}
+                ref={ctaRef}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 text-white backdrop-blur-2xl shadow-lg ring-1 ring-black/5 transition"
               >
                 Latest News <ArrowRight size={18} />
