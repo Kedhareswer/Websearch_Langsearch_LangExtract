@@ -17,70 +17,71 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const backBtnRef = useRef<HTMLButtonElement | null>(null);
+  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchNews = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: "latest news",
-            count: 8,
-            freshness: "7d",
-            summary: false,
-            deepSearch: true,
-          }),
-          // avoid any caching
-          cache: "no-store",
-        });
+  const categories = ["All", "AI", "Sports", "Entertainment", "Politics", "Socials"] as const;
+  type Category = typeof categories[number];
+  const [category, setCategory] = useState<Category>("All");
 
-        const contentType = res.headers.get("content-type") || "";
-        let data: any = null;
+  const fetchNews = async (cat: Category) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: cat === "All" ? "latest news" : `latest ${cat} news`,
+          count: 8,
+          freshness: "7d",
+          summary: false,
+          deepSearch: true,
+        }),
+        cache: "no-store",
+      });
 
-        if (contentType.includes("application/json")) {
-          try {
-            data = await res.json();
-          } catch (parseErr) {
-            // Body might be empty or malformed – try text to surface details
-            const fallbackText = await res.text().catch(() => "");
-            throw new Error(
-              fallbackText
-                ? `Invalid JSON from /api/search: ${fallbackText.slice(0, 200)}`
-                : "Empty response from /api/search"
-            );
-          }
-        } else {
-          const text = await res.text().catch(() => "");
+      const contentType = res.headers.get("content-type") || "";
+      let data: any = null;
+      if (contentType.includes("application/json")) {
+        try {
+          data = await res.json();
+        } catch (parseErr) {
+          const fallbackText = await res.text().catch(() => "");
           throw new Error(
-            text ? text.slice(0, 200) : `Non-JSON response (status ${res.status})`
+            fallbackText ? `Invalid JSON from /api/search: ${fallbackText.slice(0, 200)}` : "Empty response from /api/search"
           );
         }
-
-        if (!res.ok || data?.error) throw new Error(data?.error || "Failed to fetch news");
-        if (isMounted) {
-          setItems(Array.isArray(data?.results) ? data.results : []);
-          setLastUpdated(Date.now());
-        }
-      } catch (e) {
-        if (isMounted) setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (isMounted) setLoading(false);
+      } else {
+        const text = await res.text().catch(() => "");
+        throw new Error(text ? text.slice(0, 200) : `Non-JSON response (status ${res.status})`);
       }
-    };
 
-    fetchNews();
+      if (!res.ok || data?.error) throw new Error(data?.error || "Failed to fetch news");
+      if (isMountedRef.current) {
+        setItems(Array.isArray(data?.results) ? data.results : []);
+        setLastUpdated(Date.now());
+      }
+    } catch (e) {
+      if (isMountedRef.current) setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      if (isMountedRef.current) setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    isMountedRef.current = true;
     // focus back button when mounted for better accessibility
     requestAnimationFrame(() => {
       backBtnRef.current?.focus();
     });
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    fetchNews(category);
+  }, [category]);
 
   // util: extract hostname from URL
   const getHost = (u: string) => {
@@ -106,49 +107,7 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                // retry fetch quickly
-                setError(null);
-                setLoading(true);
-                // trigger effect body without remount by calling inline fetch
-                (async () => {
-                  try {
-                    const res = await fetch("/api/search", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        query: "latest news",
-                        count: 8,
-                        freshness: "7d",
-                        summary: false,
-                        deepSearch: true,
-                      }),
-                      cache: "no-store",
-                    });
-                    const contentType = res.headers.get("content-type") || "";
-                    let data: any = null;
-                    if (contentType.includes("application/json")) {
-                      try {
-                        data = await res.json();
-                      } catch {
-                        const t = await res.text().catch(() => "");
-                        throw new Error(t ? `Invalid JSON: ${t.slice(0, 200)}` : "Empty response");
-                      }
-                    } else {
-                      const t = await res.text().catch(() => "");
-                      throw new Error(t ? t.slice(0, 200) : `Non-JSON response (${res.status})`);
-                    }
-                    if (!res.ok || data?.error) throw new Error(data?.error || "Failed to fetch news");
-                    setItems(Array.isArray(data?.results) ? data.results : []);
-                    setLastUpdated(Date.now());
-                    setError(null);
-                  } catch (err) {
-                    setError(err instanceof Error ? err.message : String(err));
-                  } finally {
-                    setLoading(false);
-                  }
-                })();
-              }}
+              onClick={() => fetchNews(category)}
               aria-label="Refresh latest news"
               disabled={loading}
               aria-disabled={loading}
@@ -166,6 +125,28 @@ export default function LatestNews({ onBack }: { onBack?: () => void }) {
                 Back
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Category pills */}
+        <div className="mb-4 -mt-2 overflow-x-auto">
+          <div className="flex items-center gap-2 min-w-max">
+            {categories.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCategory(c)}
+                aria-pressed={category === c}
+                aria-label={`Show ${c} news`}
+                className={`px-3 py-1.5 rounded-full border transition whitespace-nowrap ${
+                  category === c
+                    ? 'bg-primary/15 border-primary/30 text-primary'
+                    : 'bg-white/20 hover:bg-white/30 border-white/40 text-foreground'
+                }`}
+              >
+                {c}
+              </button>
+            ))}
           </div>
         </div>
 
